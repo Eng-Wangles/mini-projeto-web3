@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web3 Blockchain Interface</title>
+    <script src="https://cdn.jsdelivr.net/npm/web3@1.6.1/dist/web3.min.js"></script>
+</head>
+<body>
+    <h1>Welcome to the Web3 Blockchain Interface</h1>
+    <script>
+        // Check if Web3 is injected by the browser
+        if (typeof window.ethereum !== 'undefined') {
+            const web3 = new Web3(window.ethereum);
+            // Request account access if needed
+            window.ethereum.request({ method: 'eth_requestAccounts' }).then((accounts) => {
+                console.log('Connected account:', accounts[0]);
+            });
+        } else {
+            console.log('Please install MetaMask or another Web3 wallet.');
+        }
+    </script>
+</body>
+</html>
