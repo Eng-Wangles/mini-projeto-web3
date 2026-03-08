@@ -4,11 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Registrar Dados na Blockchain</title>
-
-    <!-- Carregar ethers.js no HEAD! -->
-    <script src="https://unpkg.com/ethers@6.8.1/dist/ethers.umd.min.js"></script>
-        crossorigin="anonymous"></script>
-
+    <!-- CDN seguro do ethers.js v6 UMD -->
+    <script src="https://cdn.jsdelivr.net/npm/ethers@6.8.1/dist/ethers.umd.min.js"></script>
     <style>
         body{font-family:sans-serif;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);min-height:100vh;display:flex;justify-content:center;align-items:center;padding:20px;}
         .container{background:#fff;border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,0.15);padding:40px;max-width:400px;width:100%;}
@@ -54,6 +51,7 @@ const CONTRACT_ABI = [
 
 let provider = null, signer = null, contract = null, currentAccount = null;
 
+// Funções de UI
 function setUIConnected(account) {
     document.getElementById('statusBox').className = 'status-box connected';
     document.getElementById('statusBox').innerHTML = `<div>✓ Conectado: <span style="font-family:monospace">${account}</span></div>`;
@@ -77,16 +75,39 @@ function showResponse(msg, type) {
     el.innerHTML = `<div class="${cls}">${msg}</div>`;
 }
 
+// Botão só ativa após ethers.js (v6) carregado
+function waitForEthers() {
+    const btn = document.getElementById('connectBtn');
+    if (window.ethers && ethers.BrowserProvider) {
+        btn.disabled = false;
+        btn.onclick = connectWallet;
+    } else {
+        btn.disabled = true;
+        setTimeout(waitForEthers, 120);
+    }
+}
+waitForEthers();
+
+// Função conectar carteira
 async function connectWallet() {
+    if (!window.ethers || !ethers.BrowserProvider) {
+        showResponse('Biblioteca ethers.js (v6) não encontrada/correta. Recarregue a página ou revise o script CDN!', 'error');
+        return;
+    }
     if (!window.ethereum) {
-        showResponse('MetaMask não instalado.', 'error'); return;
+        showResponse('MetaMask não instalado!', 'error');
+        return;
     }
     try {
-        provider = new ethers.BrowserProvider(window.ethereum);
         await window.ethereum.request({method:"eth_requestAccounts"});
+        provider = new ethers.BrowserProvider(window.ethereum);
         signer = await provider.getSigner();
+        if (!signer) {
+            showResponse('Não foi possível obter o signer da carteira!', 'error');
+            return;
+        }
         contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
-        let address = await signer.getAddress();
+        const address = await signer.getAddress();
         // valida chainId
         const n = await provider.getNetwork();
         if (n.chainId !== 11155111) {
@@ -96,7 +117,9 @@ async function connectWallet() {
         currentAccount = address;
         setUIConnected(currentAccount);
         showResponse('Carteira conectada!','success');
-    } catch(e) { showResponse('Erro: '+ (e.info?.error?.message || e.message), 'error'); }
+    } catch(e) {
+        showResponse('Erro: '+ (e.info?.error?.message || e.message || e), 'error');
+    }
 }
 async function disconnectWallet() {
     currentAccount = null; provider = null; signer = null; contract = null;
@@ -119,23 +142,11 @@ async function registerData() {
            'success');
         document.getElementById('productData').value = '';
     } catch(e) {
-        showResponse('Erro Tx: '+(e.info?.error?.message || e.message), 'error');
+        showResponse('Erro Tx: '+(e.info?.error?.message || e.message || e), 'error');
     } finally {
         document.getElementById('submitBtn').disabled = false;
     }
 }
-// Habilita o botão só quando ethers.js estiver disponível
-function waitForEthers() {
-    const btn = document.getElementById('connectBtn');
-    if (window.ethers && ethers.BrowserProvider) {
-        btn.disabled = false;
-        btn.onclick = connectWallet;
-    } else {
-        btn.disabled = true;
-        setTimeout(waitForEthers, 120);
-    }
-}
-waitForEthers();
 
 // outros binds
 document.getElementById('disconnectBtn').onclick = disconnectWallet;
