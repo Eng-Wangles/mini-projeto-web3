@@ -4,299 +4,78 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Registrar Dados na Blockchain</title>
+    <!-- ethers.js corretamente carregado -->
+    <script src="https://cdn.ethers.org/lib/ethers-v6.umd.min.js"></script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-        }
-
-        .container {
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            padding: 40px;
-            max-width: 500px;
-            width: 100%;
-        }
-
-        h1 {
-            color: #333;
-            margin-bottom: 10px;
-            font-size: 28px;
-        }
-
-        .subtitle {
-            color: #666;
-            margin-bottom: 30px;
-            font-size: 14px;
-        }
-
-        .status-box {
-            background: #f0f4ff;
-            border-left: 4px solid #667eea;
-            padding: 15px;
-            border-radius: 4px;
-            margin-bottom: 25px;
-            font-size: 14px;
-        }
-
-        .status-box.connected {
-            background: #f0fff4;
-            border-left-color: #48bb78;
-        }
-
-        .status-box.disconnected {
-            background: #fff5f5;
-            border-left-color: #f56565;
-        }
-
-        .status-label {
-            font-weight: bold;
-            margin-bottom: 5px;
-        }
-
-        .status-value {
-            color: #667eea;
-            word-break: break-all;
-            font-size: 12px;
-            font-family: monospace;
-        }
-
-        .status-box.connected .status-value {
-            color: #48bb78;
-        }
-
-        .status-box.disconnected .status-value {
-            color: #f56565;
-        }
-
-        .button-group {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 25px;
-        }
-
-        button {
-            flex: 1;
-            padding: 12px;
-            border: none;
-            border-radius: 6px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .btn-connect {
-            background: #667eea;
-            color: white;
-        }
-
-        .btn-connect:hover:not(:disabled) {
-            background: #5568d3;
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
-        }
-
-        .btn-disconnect {
-            background: #e2e8f0;
-            color: #333;
-        }
-
-        .btn-disconnect:hover:not(:disabled) {
-            background: #cbd5e0;
-        }
-
-        button:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 8px;
-            color: #333;
-            font-weight: 600;
-            font-size: 14px;
-        }
-
-        input {
-            width: 100%;
-            padding: 12px;
-            border: 2px solid #e2e8f0;
-            border-radius: 6px;
-            font-size: 14px;
-            transition: border-color 0.3s ease;
-        }
-
-        input:focus {
-            outline: none;
-            border-color: #667eea;
-        }
-
-        input::placeholder {
-            color: #a0aec0;
-        }
-
-        .btn-submit {
-            width: 100%;
-            padding: 14px;
-            background: #667eea;
-            color: white;
-            font-size: 16px;
-            font-weight: 600;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .btn-submit:hover:not(:disabled) {
-            background: #5568d3;
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
-        }
-
-        .btn-submit:disabled {
-            background: #cbd5e0;
-            cursor: not-allowed;
-        }
-
-        .response-box {
-            margin-top: 25px;
-            padding: 15px;
-            border-radius: 6px;
-            display: none;
-            font-size: 13px;
-        }
-
-        .response-box.success {
-            background: #f0fff4;
-            border: 1px solid #9ae6b4;
-            color: #22543d;
-            display: block;
-        }
-
-        .response-box.error {
-            background: #fff5f5;
-            border: 1px solid #fc8181;
-            color: #742a2a;
-            display: block;
-        }
-
-        .response-box.loading {
-            background: #f0f4ff;
-            border: 1px solid #bee3f8;
-            color: #2c5282;
-            display: block;
-        }
-
-        .response-title {
-            font-weight: bold;
-            margin-bottom: 8px;
-        }
-
-        .tx-hash {
-            font-family: monospace;
-            font-size: 11px;
-            word-break: break-all;
-            margin-top: 8px;
-            padding: 8px;
-            background: rgba(0, 0, 0, 0.1);
-            border-radius: 4px;
-        }
-
-        .tx-link {
-            color: #667eea;
-            text-decoration: none;
-            font-weight: 600;
-            margin-top: 10px;
-            display: inline-block;
-        }
-
-        .tx-link:hover {
-            text-decoration: underline;
-        }
-
-        .info-box {
-            background: #fffaf0;
-            border-left: 4px solid #ed8936;
-            padding: 12px;
-            border-radius: 4px;
-            margin-bottom: 20px;
-            font-size: 12px;
-            color: #744210;
-        }
-
-        .info-box strong {
-            display: block;
-            margin-bottom: 5px;
-        }
+        /* ... (mantém todos os estilos que já estavam no exemplo anterior) ... */
+        * {margin:0;padding:0;box-sizing:border-box;}
+        body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);min-height:100vh;display:flex;justify-content:center;align-items:center;padding:20px;}
+        .container{background:white;border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,0.3);padding:40px;max-width:500px;width:100%;}
+        h1{color:#333;margin-bottom:10px;font-size:28px;}
+        .subtitle{color:#666;margin-bottom:30px;font-size:14px;}
+        .status-box{background:#f0f4ff;border-left:4px solid #667eea;padding:15px;border-radius:4px;margin-bottom:25px;font-size:14px;}
+        .status-box.connected{background:#f0fff4;border-left-color:#48bb78;}
+        .status-box.disconnected{background:#fff5f5;border-left-color:#f56565;}
+        .status-label{font-weight:bold;margin-bottom:5px;}
+        .status-value{color:#667eea;word-break:break-all;font-size:12px;font-family:monospace;}
+        .status-box.connected .status-value{color:#48bb78;}
+        .status-box.disconnected .status-value{color:#f56565;}
+        .button-group{display:flex;gap:10px;margin-bottom:25px;}
+        button{flex:1;padding:12px;border:none;border-radius:6px;font-size:14px;font-weight:600;cursor:pointer;transition:all 0.3s ease;}
+        .btn-connect{background:#667eea;color:white;}
+        .btn-connect:hover:not(:disabled){background:#5568d3;transform:translateY(-2px);box-shadow:0 5px 15px rgba(102,126,234,0.4);}
+        .btn-disconnect{background:#e2e8f0;color:#333;}
+        .btn-disconnect:hover:not(:disabled){background:#cbd5e0;}
+        button:disabled{opacity:0.5;cursor:not-allowed;}
+        .form-group{margin-bottom:20px;}
+        label{display:block;margin-bottom:8px;color:#333;font-weight:600;font-size:14px;}
+        input{width:100%;padding:12px;border:2px solid #e2e8f0;border-radius:6px;font-size:14px;transition:border-color 0.3s ease;}
+        input:focus{outline:none;border-color:#667eea;}
+        input::placeholder{color:#a0aec0;}
+        .btn-submit{width:100%;padding:14px;background:#667eea;color:white;font-size:16px;font-weight:600;border:none;border-radius:6px;cursor:pointer;transition:all 0.3s ease;}
+        .btn-submit:hover:not(:disabled){background:#5568d3;transform:translateY(-2px);box-shadow:0 5px 15px rgba(102,126,234,0.4);}
+        .btn-submit:disabled{background:#cbd5e0;cursor:not-allowed;}
+        .response-box{margin-top:25px;padding:15px;border-radius:6px;display:none;font-size:13px;}
+        .response-box.success{background:#f0fff4;border:1px solid #9ae6b4;color:#22543d;display:block;}
+        .response-box.error{background:#fff5f5;border:1px solid #fc8181;color:#742a2a;display:block;}
+        .response-box.loading{background:#f0f4ff;border:1px solid #bee3f8;color:#2c5282;display:block;}
+        .response-title{font-weight:bold;margin-bottom:8px;}
+        .tx-hash{font-family:monospace;font-size:11px;word-break:break-all;margin-top:8px;padding:8px;background:rgba(0,0,0,0.1);border-radius:4px;}
+        .tx-link{color:#667eea;text-decoration:none;font-weight:600;margin-top:10px;display:inline-block;}
+        .tx-link:hover{text-decoration:underline;}
+        .info-box{background:#fffaf0;border-left:4px solid #ed8936;padding:12px;border-radius:4px;margin-bottom:20px;font-size:12px;color:#744210;}
+        .info-box strong{display:block;margin-bottom:5px;}
     </style>
 </head>
 <body>
     <div class="container">
         <h1>📦 Registro na Blockchain</h1>
         <p class="subtitle">Registre dados de produtos na rede Sepolia</p>
-
         <div class="info-box">
             <strong>⚠️ Rede: Sepolia Testnet</strong>
             Certifique-se que sua carteira está conectada na rede Sepolia
         </div>
-
         <div id="statusBox" class="status-box disconnected">
             <div class="status-label">Status: Desconectado</div>
             <div class="status-value">Clique em "Conectar Carteira" para começar</div>
         </div>
-
         <div class="button-group">
             <button class="btn-connect" id="connectBtn" onclick="connectWallet()">Conectar Carteira</button>
             <button class="btn-disconnect" id="disconnectBtn" onclick="disconnectWallet()" disabled>Desconectar</button>
         </div>
-
         <div class="form-group">
             <label for="productData">Dados do Produto</label>
-            <input 
-                type="text" 
-                id="productData" 
-                placeholder="Ex: Produto enviado - Pedido #123" 
-                disabled
-            >
+            <input type="text" id="productData" placeholder="Ex: Produto enviado - Pedido #123" disabled>
         </div>
-
-        <button class="btn-submit" id="submitBtn" onclick="registerData()" disabled>
-            Registrar na Blockchain
-        </button>
-
+        <button class="btn-submit" id="submitBtn" onclick="registerData()" disabled>Registrar na Blockchain</button>
         <div id="responseBox" class="response-box"></div>
     </div>
-
     <script>
-        // Configurações do contrato
         const CONTRACT_ADDRESS = "0x4dB20f580be4d5df4A560Eff8E581514674E4B7f";
         const CONTRACT_ABI = [
             {
                 "inputs": [
-                    {
-                        "internalType": "string",
-                        "name": "data",
-                        "type": "string"
-                    }
+                    { "internalType": "string", "name": "data", "type": "string" }
                 ],
                 "name": "registerData",
                 "outputs": [],
@@ -307,64 +86,45 @@
                 "inputs": [],
                 "name": "getLatestData",
                 "outputs": [
-                    {
-                        "internalType": "string",
-                        "name": "",
-                        "type": "string"
-                    },
-                    {
-                        "internalType": "address",
-                        "name": "",
-                        "type": "address"
-                    },
-                    {
-                        "internalType": "uint256",
-                        "name": "",
-                        "type": "uint256"
-                    }
+                    { "internalType": "string", "name": "", "type": "string" },
+                    { "internalType": "address", "name": "", "type": "address" },
+                    { "internalType": "uint256", "name": "", "type": "uint256" }
                 ],
                 "stateMutability": "view",
                 "type": "function"
             }
         ];
-
         let provider;
         let signer;
         let contract;
         let currentAccount = null;
 
-        // Verificar se MetaMask está instalado
         function isMetaMaskInstalled() {
             return typeof window.ethereum !== "undefined";
         }
 
-        // Conectar à carteira
         async function connectWallet() {
+            if (!window.ethers) {
+                showResponse("Aguarde o carregamento do ethers.js...", "error");
+                return;
+            }
             if (!isMetaMaskInstalled()) {
                 showResponse("MetaMask não está instalado. Instale a extensão para continuar.", "error");
                 return;
             }
 
             try {
-                const { ethers } = window;
                 provider = new ethers.BrowserProvider(window.ethereum);
-                
-                // Solicitar acesso às contas
-                const accounts = await window.ethereum.request({ 
-                    method: "eth_requestAccounts" 
-                });
-                
+                const accounts = await window.ethereum.request({ method: "eth_requestAccounts" });
                 currentAccount = accounts[0];
                 signer = await provider.getSigner();
                 contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
-
-                // Verificar se está na rede Sepolia
                 const network = await provider.getNetwork();
                 if (network.chainId !== 11155111) {
                     try {
                         await window.ethereum.request({
                             method: "wallet_switchEthereumChain",
-                            params: [{ chainId: "0xaa36a7" }], // Sepolia chainId
+                            params: [{ chainId: "0xaa36a7" }],
                         });
                     } catch (switchError) {
                         if (switchError.code === 4902) {
@@ -373,7 +133,6 @@
                         }
                     }
                 }
-
                 updateUI(true);
                 showResponse(`Carteira conectada: ${currentAccount}`, "success");
             } catch (error) {
@@ -382,7 +141,6 @@
             }
         }
 
-        // Desconectar carteira
         async function disconnectWallet() {
             currentAccount = null;
             provider = null;
@@ -392,21 +150,16 @@
             showResponse("", "");
         }
 
-        // Atualizar UI
         function updateUI(isConnected) {
             const statusBox = document.getElementById("statusBox");
             const connectBtn = document.getElementById("connectBtn");
             const disconnectBtn = document.getElementById("disconnectBtn");
             const productInput = document.getElementById("productData");
             const submitBtn = document.getElementById("submitBtn");
-
             if (isConnected) {
                 statusBox.classList.remove("disconnected");
                 statusBox.classList.add("connected");
-                statusBox.innerHTML = `
-                    <div class="status-label">✓ Conectado</div>
-                    <div class="status-value">${currentAccount}</div>
-                `;
+                statusBox.innerHTML = `<div class="status-label">✓ Conectado</div><div class="status-value">${currentAccount}</div>`;
                 connectBtn.disabled = true;
                 disconnectBtn.disabled = false;
                 productInput.disabled = false;
@@ -414,10 +167,7 @@
             } else {
                 statusBox.classList.remove("connected");
                 statusBox.classList.add("disconnected");
-                statusBox.innerHTML = `
-                    <div class="status-label">Status: Desconectado</div>
-                    <div class="status-value">Clique em "Conectar Carteira" para começar</div>
-                `;
+                statusBox.innerHTML = `<div class="status-label">Status: Desconectado</div><div class="status-value">Clique em "Conectar Carteira" para começar</div>`;
                 connectBtn.disabled = false;
                 disconnectBtn.disabled = true;
                 productInput.disabled = true;
@@ -425,31 +175,23 @@
             }
         }
 
-        // Registrar dados
         async function registerData() {
             const productInput = document.getElementById("productData");
             const data = productInput.value.trim();
-
             if (!data) {
                 showResponse("Por favor, insira os dados do produto.", "error");
                 return;
             }
-
             if (!contract) {
                 showResponse("Carteira não conectada.", "error");
                 return;
             }
-
             try {
                 showResponse("Enviando transação...", "loading");
                 document.getElementById("submitBtn").disabled = true;
-
                 const tx = await contract.registerData(data);
                 showResponse(`Transação enviada! Hash: ${tx.hash}`, "loading");
-
-                // Aguardar confirmação
                 const receipt = await tx.wait();
-
                 productInput.value = "";
                 showResponse(
                     `✓ Transação confirmada na Blockchain!<br>
@@ -468,36 +210,22 @@
             }
         }
 
-        // Mostrar resposta
         function showResponse(message, type) {
             const responseBox = document.getElementById("responseBox");
-            
             if (!type || !message) {
                 responseBox.innerHTML = "";
                 responseBox.className = "response-box";
                 return;
             }
-
             responseBox.innerHTML = `<div class="response-title">${
                 type === "success" ? "✓ Sucesso" : 
                 type === "error" ? "✗ Erro" : 
                 "⏳ Processando"
             }</div>${message}`;
-            
             responseBox.className = `response-box ${type}`;
         }
 
-        // Carregar ethers.js
-        window.addEventListener('load', async () => {
-            const script = document.createElement('script');
-            script.src = 'https://cdn.ethers.org/lib/ethers-v6.umd.min.js';
-            script.onload = () => {
-                console.log("ethers.js carregado com sucesso");
-            };
-            document.head.appendChild(script);
-        });
-
-        // Ouvir mudanças de conta
+        // Ouvir mudanças de conta/rede
         if (window.ethereum) {
             window.ethereum.on('accountsChanged', (accounts) => {
                 if (accounts.length === 0) {
@@ -507,7 +235,6 @@
                     updateUI(true);
                 }
             });
-
             window.ethereum.on('chainChanged', () => {
                 window.location.reload();
             });
